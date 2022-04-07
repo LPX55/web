@@ -1,23 +1,36 @@
-import { HStack, StackProps } from '@chakra-ui/react'
+import { Stack, StackProps } from '@chakra-ui/react'
 import { useTranslate } from 'react-polyglot'
-import { routes } from 'Routes/Routes'
+import { Link as ReactRouterLink } from 'react-router-dom'
+import { routes } from 'Routes/RoutesCommon'
 
 import { MainNavLink } from './MainNavLink'
 
-export const NavBar = (props: StackProps) => {
+type NavBarProps = {
+  isCompact?: boolean
+} & StackProps
+
+export const NavBar = ({ isCompact, ...rest }: NavBarProps) => {
   const translate = useTranslate()
+
   return (
-    <HStack spacing={12} ml='auto' mr='auto' alignSelf='center' {...props}>
-      {routes.map(item => (
-        <MainNavLink
-          key={item.label}
-          icon={item.icon}
-          href={item.path}
-          to={item.path}
-          label={translate(item.label)}
-          aria-label={translate(item.label)}
-        />
-      ))}
-    </HStack>
+    <Stack width='full' flex='1 1 0%' {...rest}>
+      {routes
+        .filter(route => !route.disable && !route.hide)
+        .map((item, idx) => {
+          return (
+            <MainNavLink
+              isCompact={isCompact}
+              as={ReactRouterLink}
+              key={idx}
+              leftIcon={item.icon}
+              href={item.path}
+              to={item.path}
+              label={translate(item.label)}
+              aria-label={translate(item.label)}
+              data-test={`navbar-${item.label.split('.')[1]}-button`}
+            />
+          )
+        })}
+    </Stack>
   )
 }

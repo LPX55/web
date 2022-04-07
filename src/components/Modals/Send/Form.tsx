@@ -1,6 +1,7 @@
-import { useToast } from '@chakra-ui/react'
-import { useModal } from 'context/ModalProvider/ModalProvider'
+import { Asset, ChainTypes } from '@shapeshiftoss/types'
+import { chainAdapters } from '@shapeshiftoss/types'
 import { AnimatePresence } from 'framer-motion'
+import React, { useEffect } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import {
   Redirect,
@@ -10,79 +11,101 @@ import {
   useHistory,
   useLocation
 } from 'react-router-dom'
+import { SelectAssetRoutes } from 'components/SelectAssets/SelectAssetCommon'
+import { SelectAssetRouter } from 'components/SelectAssets/SelectAssetRouter'
+import { AccountSpecifier } from 'state/slices/accountSpecifiersSlice/accountSpecifiersSlice'
+import { selectMarketDataById } from 'state/slices/selectors'
+import { useAppSelector } from 'state/store'
 
-import { SelectAssets } from '../../SelectAssets/SelectAssets'
-import { Confirm } from './Confirm'
-import { Details } from './Details'
+import { useFormSend } from './hooks/useFormSend/useFormSend'
+import { SendFormFields, SendRoutes } from './SendCommon'
+import { Address } from './views/Address'
+import { Confirm } from './views/Confirm'
+import { Details } from './views/Details'
+import { QrCodeScanner } from './views/QrCodeScanner'
 
-// @TODO Determine if we should use symbol for display purposes or some other identifier for display
-type SendInput = {
-  address: string
-  asset: string
-  fee: string
-  crypto: {
-    amount: string
-    symbol: string
-  }
-  fiat: {
-    amount: string
-    symbol: string
-  }
+export type SendInput = {
+  [SendFormFields.Address]: string
+  [SendFormFields.EnsName]?: string
+  [SendFormFields.AccountId]: AccountSpecifier
+  [SendFormFields.AmountFieldError]: string | [string, { asset: string }]
+  [SendFormFields.Asset]: Asset
+  [SendFormFields.FeeType]: chainAdapters.FeeDataKey
+  [SendFormFields.EstimatedFees]: chainAdapters.FeeDataEstimate<ChainTypes>
+  [SendFormFields.CryptoAmount]: string
+  [SendFormFields.CryptoSymbol]: string
+  [SendFormFields.FiatAmount]: string
+  [SendFormFields.FiatSymbol]: string
+  [SendFormFields.SendMax]: boolean
 }
 
-export const Form = () => {
+type SendFormProps = {
+  asset: Asset
+  accountId?: AccountSpecifier
+}
+
+export const Form = ({ asset: initialAsset, accountId }: SendFormProps) => {
   const location = useLocation()
   const history = useHistory()
-  const toast = useToast()
-  const { send } = useModal()
+  const { handleSend } = useFormSend()
+  const marketData = useAppSelector(state => selectMarketDataById(state, initialAsset.caip19))
 
   const methods = useForm<SendInput>({
     mode: 'onChange',
     defaultValues: {
+      accountId,
       address: '',
-      fee: 'Average',
-      crypto: {
-        amount: '',
-        symbol: 'BTC' // @TODO wire up to state
-      },
-      fiat: {
-        amount: '',
-        symbol: 'USD' // @TODO wire up to state
-      }
+      ensName: '',
+      asset: initialAsset,
+      feeType: chainAdapters.FeeDataKey.Average,
+      cryptoAmount: '',
+      cryptoSymbol: initialAsset?.symbol,
+      fiatAmount: '',
+      fiatSymbol: 'USD' // TODO: use user preferences to get default fiat currency
     }
   })
 
-  const handleClick = () => {
-    history.push('/send/details')
+  const handleAssetSelect = async (asset: Asset, accountId: AccountSpecifier) => {
+    methods.setValue(SendFormFields.Asset, { ...asset, ...marketData })
+    methods.setValue(SendFormFields.CryptoAmount, '')
+    methods.setValue(SendFormFields.CryptoSymbol, asset.symbol)
+    methods.setValue(SendFormFields.FiatAmount, '')
+    methods.setValue(SendFormFields.FiatSymbol, 'USD')
+    methods.setValue(SendFormFields.AccountId, accountId)
+
+    history.push(SendRoutes.Address)
   }
 
-  const handleSubmit = (data: any) => {
-    console.info(data)
-    send.close()
-    toast({
-      title: 'Bitcoin Sent.',
-      description: 'You have successfully sent 0.005 BTC',
-      status: 'success',
-      duration: 9000,
-      isClosable: true,
-      position: 'top-right'
-    })
+  const checkKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Enter') event.preventDefault()
   }
+
+  useEffect(() => {
+    if (!accountId && initialAsset) {
+      history.push(SendRoutes.Select, {
+        toRoute: SelectAssetRoutes.Account,
+        assetId: initialAsset.caip19
+      })
+    }
+  }, [accountId, initialAsset, history])
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleSubmit)}>
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+      <form onSubmit={methods.handleSubmit(handleSend)} onKeyDown={checkKeyDown}>
         <AnimatePresence exitBeforeEnter initial={false}>
           <Switch location={location} key={location.key}>
             <Route
-              path='/send/select'
+              path={SendRoutes.Select}
               component={(props: RouteComponentProps) => (
-                <SelectAssets onClick={handleClick} {...props} />
+                <SelectAssetRouter onClick={handleAssetSelect} {...props} />
               )}
             />
-            <Route path='/send/details' component={Details} />
-            <Route path='/send/confirm' component={Confirm} />
-            <Redirect exact from='/' to='/send/select' />
+            <Route path={SendRoutes.Address} component={Address} />
+            <Route path={SendRoutes.Details} component={Details} />
+            <Route path={SendRoutes.Scan} component={QrCodeScanner} />
+            <Route path={SendRoutes.Confirm} component={Confirm} />
+            <Redirect exact from='/' to={SendRoutes.Select} />
           </Switch>
         </AnimatePresence>
       </form>

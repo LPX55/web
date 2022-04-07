@@ -1,13 +1,13 @@
-import { HistoryData } from '@shapeshiftoss/market-service'
+import { HistoryData } from '@shapeshiftoss/types'
 import { Brush } from '@visx/brush'
 import BaseBrush from '@visx/brush/lib/BaseBrush'
 import { Bounds } from '@visx/brush/lib/types'
 import { LinearGradient } from '@visx/gradient'
 import { ScaleSVG } from '@visx/responsive'
 import { scaleLinear, scaleTime } from '@visx/scale'
-import { MarketContext } from 'context/MarketProvider'
 import { extent, max, min } from 'd3-array'
 import React, { useContext, useMemo, useRef } from 'react'
+import { MarketDataContext } from 'context/MarketDataProvider/MarketDataProvider'
 import { colors } from 'theme/colors'
 
 import { AreaChart } from '../AreaChart/AreaChart'
@@ -27,7 +27,7 @@ export const SecondaryChart = ({
 }: SecondaryChartProps) => {
   const {
     filteredDataState: { setFilteredData }
-  } = useContext(MarketContext)
+  } = useContext(MarketDataContext)
   const brushRef = useRef<BaseBrush | null>(null)
 
   // bounds

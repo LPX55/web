@@ -1,18 +1,29 @@
-import { Flex } from '@chakra-ui/react'
-import { Page } from 'components/Layout/Page'
+import { Stack } from '@chakra-ui/react'
+import { Main } from 'components/Layout/Main'
 
+import { DashboardSidebar } from './DashboardSidebar'
 import { Portfolio } from './Portfolio'
 
-export interface MatchParams {
+export type MatchParams = {
   assetId: string
 }
 
 export const Dashboard = () => {
   return (
-    <Page style={{ flex: 1 }}>
-      <Flex role='main' flex={1} height='100%' width='full'>
-        <Portfolio />
-      </Flex>
-    </Page>
+    <Main>
+      <Stack
+        alignItems='flex-start'
+        spacing={4}
+        mx='auto'
+        direction={{ base: 'column', xl: 'row' }}
+      >
+        <Stack spacing={4} flex='1 1 0%' width='full'>
+          <Portfolio />
+        </Stack>
+        <Stack flex='1 1 0%' width='full' maxWidth={{ base: 'full', xl: 'sm' }} spacing={4}>
+          <DashboardSidebar />
+        </Stack>
+      </Stack>
+    </Main>
   )
 }

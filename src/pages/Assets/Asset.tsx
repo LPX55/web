@@ -1,38 +1,54 @@
 import { Flex } from '@chakra-ui/react'
-import { AssetMarketData, getAssetData } from '@shapeshiftoss/market-service'
-import { Page } from 'components/Layout/Page'
-import { useCallback, useEffect, useState } from 'react'
+import type { CAIP2 } from '@shapeshiftoss/caip'
 import { useParams } from 'react-router-dom'
+import { Route } from 'Routes/helpers'
+import { AssetAccountDetails } from 'components/AssetAccountDetails'
+import { Page } from 'components/Layout/Page'
+import { marketApi } from 'state/slices/marketDataSlice/marketDataSlice'
+import {
+  selectAssetByCAIP19,
+  selectMarketDataById,
+  selectMarketDataLoadingById
+} from 'state/slices/selectors'
+import { useAppDispatch, useAppSelector } from 'state/store'
 
-import { AssetDetails } from './AssetDetails/AssetDetails'
-
+import { LoadingAsset } from './LoadingAsset'
 export interface MatchParams {
-  network: string
-  address: string
+  chainId: CAIP2
+  assetSubId: string
 }
 
-export const Asset = () => {
-  const [asset, setAsset] = useState<AssetMarketData>()
-  const [loading, setLoading] = useState<boolean>(false)
-  let { network, address } = useParams<MatchParams>()
+export const useAsset = () => {
+  const dispatch = useAppDispatch()
 
-  const getPrice = useCallback(async () => {
-    setLoading(true)
-    const asset = await getAssetData(network, address)
-    if (asset) setAsset(asset)
-    setLoading(false)
-  }, [network, address])
+  const params = useParams<MatchParams>()
+  const assetId = `${params.chainId}/${params.assetSubId}`
+  const asset = useAppSelector(state => selectAssetByCAIP19(state, assetId))
+  const marketData = useAppSelector(state => selectMarketDataById(state, assetId))
 
-  useEffect(() => {
-    getPrice()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [network, address])
+  // Many, but not all, assets are initialized with market data on app load. This dispatch will
+  // ensure that those assets not initialized on app load will reach over the network and populate
+  // the store with market data once a user visits that asset page.
+  if (!marketData) dispatch(marketApi.endpoints.findByCaip19.initiate(assetId))
 
-  return (
-    <Page style={{ flex: 1 }} loading={loading} error={!asset}>
+  const loading = useAppSelector(state => selectMarketDataLoadingById(state, assetId))
+
+  return {
+    asset,
+    marketData,
+    loading
+  }
+}
+
+export const Asset = ({ route }: { route?: Route }) => {
+  const { asset, marketData } = useAsset()
+  return !(asset && marketData) ? (
+    <Page key={asset?.tokenId}>
       <Flex role='main' flex={1} height='100%'>
-        {asset && <AssetDetails asset={asset} />}
+        <LoadingAsset />
       </Flex>
     </Page>
+  ) : (
+    <AssetAccountDetails assetId={asset.caip19} key={asset?.tokenId} route={route} />
   )
 }

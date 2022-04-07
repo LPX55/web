@@ -1,23 +1,31 @@
-import { HistoryData } from '@shapeshiftoss/market-service'
+import { useColorModeValue } from '@chakra-ui/color-mode'
+import { useToken } from '@chakra-ui/system'
+import { HistoryData } from '@shapeshiftoss/types'
 import { localPoint } from '@visx/event'
+import { Group } from '@visx/group'
 import { ScaleSVG } from '@visx/responsive'
 import { scaleLinear, scaleTime } from '@visx/scale'
 import { Bar, Line } from '@visx/shape'
-import { defaultStyles as defaultToopTipStyles, TooltipWithBounds, useTooltip } from '@visx/tooltip'
+import { defaultStyles as defaultTooltipStyles, TooltipWithBounds, useTooltip } from '@visx/tooltip'
 import { bisector, extent, max, min } from 'd3-array'
 import dayjs from 'dayjs'
 import numeral from 'numeral'
 import React, { useCallback, useMemo } from 'react'
+import { Amount } from 'components/Amount/Amount'
+import { useLocaleFormatter } from 'hooks/useLocaleFormatter/useLocaleFormatter'
 import { colors } from 'theme/colors'
 
 import { AreaChart } from '../AreaChart/AreaChart'
 import { LineChart } from '../LineChart/LineChart'
+import { MaxPrice } from '../MaxPrice'
+import { MinPrice } from '../MinPrice'
 
 export interface PrimaryChartProps {
   data: HistoryData[]
   width: number
   height: number
   margin?: { top: number; right: number; bottom: number; left: number }
+  color?: string
 }
 
 export type TooltipData = HistoryData
@@ -25,13 +33,13 @@ export type TooltipData = HistoryData
 // accessors
 const getDate = (d: HistoryData) => new Date(d.date)
 const getStockValue = (d: HistoryData) => d?.price || 0
-const getFormatValue = (d: HistoryData) => numeral(d?.price || 0).format('$0,0.00000')
 const bisectDate = bisector<HistoryData, Date>(d => new Date(d.date)).left
 
 export const PrimaryChart = ({
   data,
   width = 10,
   height,
+  color = 'green.500',
   margin = { top: 0, right: 0, bottom: 0, left: 0 }
 }: PrimaryChartProps) => {
   const {
@@ -41,10 +49,37 @@ export const PrimaryChart = ({
     tooltipTop = 0,
     tooltipLeft = 0
   } = useTooltip<HistoryData>()
+
+  const {
+    number: { toFiat }
+  } = useLocaleFormatter({ fiatType: 'USD' })
+
+  const [chartColor] = useToken('colors', [color])
+  const tooltipBg = useColorModeValue('white', colors.gray[800])
+  const tooltipBorder = useColorModeValue(colors.gray[200], colors.gray[700])
+  const tooltipColor = useColorModeValue(colors.gray[800], 'white')
+
   // bounds
   const xMax = Math.max(width - margin.left - margin.right, 0)
   const yMax = Math.max(height - margin.top - margin.bottom, 0)
 
+  const firstPoint = data[0]
+  const currentPoint = data[data.length - 1]
+  const minPrice = Math.min(...data.map(getStockValue))
+  const maxPrice = Math.max(...data.map(getStockValue))
+  const maxPriceIndex = data.findIndex(x => x.price === maxPrice)
+  const minPriceIndex = data.findIndex(x => x.price === minPrice)
+  const maxPriceDate = getDate(data[maxPriceIndex])
+  const minPriceDate = getDate(data[minPriceIndex])
+
+  const maxData = [
+    { date: getDate(firstPoint).valueOf(), price: maxPrice },
+    { date: getDate(currentPoint).valueOf(), price: maxPrice }
+  ]
+  const minData = [
+    { date: getDate(firstPoint).valueOf(), price: minPrice },
+    { date: getDate(currentPoint).valueOf(), price: minPrice }
+  ]
   // scales
   const dateScale = useMemo(() => {
     return scaleTime({
@@ -97,7 +132,7 @@ export const PrimaryChart = ({
           yMax={yMax}
           xScale={dateScale}
           yScale={priceScale}
-          stroke={colors.green[500]}
+          stroke={chartColor}
           xTickFormat={d => {
             return numeral(d).format(d <= 100 ? '$0.00' : '$0,0')
           }}
@@ -111,7 +146,7 @@ export const PrimaryChart = ({
           yMax={yMax}
           xScale={dateScale}
           yScale={priceScale}
-          gradientColor={colors.green[500]}
+          gradientColor={chartColor}
         />
         {/* a transparent ele that track the pointer event, allow us to display tooltup */}
         <Bar
@@ -126,10 +161,37 @@ export const PrimaryChart = ({
           onMouseMove={handleTooltip}
           onMouseLeave={() => hideTooltip()}
         />
+        <Group top={margin.top} left={margin.left}>
+          <MaxPrice
+            data={maxData}
+            yText={priceScale(maxPrice)}
+            xText={dateScale(maxPriceDate)}
+            label={toFiat(maxPrice)}
+            xDate={maxPriceDate}
+            yScale={priceScale}
+            xScale={dateScale}
+            width={width}
+            yMax={yMax}
+            stroke={chartColor}
+            margin={{ ...margin }}
+          />
+          <MinPrice
+            data={minData}
+            yText={priceScale(minPrice)}
+            label={toFiat(minPrice)}
+            yScale={priceScale}
+            xScale={dateScale}
+            xDate={minPriceDate}
+            width={width}
+            yMax={yMax}
+            stroke={chartColor}
+            margin={{ ...margin }}
+          />
+        </Group>
         {/* drawing the line and circle indicator to be display in cursor over a
           selected area */}
         {tooltipData && (
-          <g>
+          <Group>
             <Line
               from={{ x: tooltipLeft, y: margin.top * 2 }}
               to={{ x: tooltipLeft, y: yMax + margin.top * 2 }}
@@ -159,7 +221,7 @@ export const PrimaryChart = ({
               strokeWidth={2}
               pointerEvents='none'
             />
-          </g>
+          </Group>
         )}
       </ScaleSVG>
       {tooltipData && (
@@ -169,19 +231,19 @@ export const PrimaryChart = ({
             top={tooltipTop - 12}
             left={tooltipLeft}
             style={{
-              ...defaultToopTipStyles,
-              background: colors.gray[500],
+              ...defaultTooltipStyles,
+              background: tooltipBg,
               padding: '0.5rem',
-              border: '1px solid white',
-              color: 'white'
+              border: `1px solid ${tooltipBorder}`,
+              color: tooltipColor
             }}
           >
             <ul style={{ padding: '0', margin: '0', listStyle: 'none' }}>
-              <li style={{ paddingBottom: '0.25rem' }}>
-                <b>{dayjs(getDate(tooltipData)).format('MMMM D, YYYY h:mm A')}</b>
-              </li>
               <li>
-                Price: <b>{`${getFormatValue(tooltipData)}`}</b>
+                <Amount.Fiat fontWeight='bold' fontSize='lg' my={2} value={tooltipData.price} />
+              </li>
+              <li style={{ paddingBottom: '0.25rem', fontSize: '12px', color: colors.gray[500] }}>
+                {dayjs(getDate(tooltipData)).format('MMMM D, YYYY h:mm A')}
               </li>
             </ul>
           </TooltipWithBounds>

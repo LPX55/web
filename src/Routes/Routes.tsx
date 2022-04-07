@@ -1,62 +1,58 @@
-import { TimeIcon } from '@chakra-ui/icons'
-import { AssetsIcon } from 'components/Icons/Assets'
-import { DashboardIcon } from 'components/Icons/Dashboard'
+import { Redirect, Route, Switch, useLocation } from 'react-router-dom'
 import { Layout } from 'components/Layout/Layout'
-import { Asset } from 'pages/Assets/Asset'
-import { AssetRightSidebar } from 'pages/Assets/AssetRightSidebar'
-import { Assets } from 'pages/Assets/Assets'
-import { AssetSidebar } from 'pages/Assets/AssetSidebar'
-import { Dashboard } from 'pages/Dashboard/Dashboard'
-import { DashboardSidebar } from 'pages/Dashboard/DashboardSidebar'
+import { useBrowserRouter } from 'hooks/useBrowserRouter/useBrowserRouter'
+import { useWallet } from 'hooks/useWallet/useWallet'
+import { ConnectWallet } from 'pages/ConnectWallet/ConnectWallet'
+import { Flags } from 'pages/Flags/Flags'
+import { PrivacyPolicy } from 'pages/Legal/PrivacyPolicy'
+import { TermsOfService } from 'pages/Legal/TermsOfService'
 import { NotFound } from 'pages/NotFound/NotFound'
-import { TradeHistory } from 'pages/TradeHistory/TradeHistory'
-import { Redirect, Route, Switch } from 'react-router-dom'
 
-import { generateAppRoutes, Route as NestedRoute } from './helpers'
+import { PrivateRoute } from './PrivateRoute'
 
-export const routes: Array<NestedRoute> = [
-  {
-    path: '/dashboard',
-    label: 'navBar.dashboard',
-    icon: <DashboardIcon />,
-    main: <Dashboard />,
-    rightSidebar: <DashboardSidebar />
-  },
-  {
-    path: '/assets',
-    label: 'navBar.assets',
-    main: <Assets />,
-    icon: <AssetsIcon color='inherit' />,
-    routes: [
-      {
-        path: '/:network/:address?',
-        label: 'Asset Details',
-        main: <Asset />,
-        leftSidebar: <AssetSidebar />,
-        rightSidebar: <AssetRightSidebar />
-      }
-    ]
-  },
-  {
-    path: '/trade-history',
-    label: 'navBar.tradeHistory',
-    icon: <TimeIcon />,
-    main: <TradeHistory />
-  }
-]
-
-const appRoutes = generateAppRoutes(routes)
+function useLocationBackground() {
+  const location = useLocation<{ background: any }>()
+  const background = location.state && location.state.background
+  return { background, location }
+}
 
 export const Routes = () => {
+  const { background, location } = useLocationBackground()
+  const { state } = useWallet()
+  const { appRoutes } = useBrowserRouter()
+  const hasWallet = Boolean(state.walletInfo?.deviceId) || state.isLoadingLocalWallet
+
   return (
-    <Switch>
+    <Switch location={background || location}>
       {appRoutes.map((route, index) => {
+        const MainComponent = route.main
         return (
-          <Route key={index} path={route.path}>
-            <Layout route={route} />
-          </Route>
+          <PrivateRoute key={index} path={route.path} exact hasWallet={hasWallet}>
+            <Layout>{MainComponent && <MainComponent />}</Layout>
+          </PrivateRoute>
         )
       })}
+      <Route path='/connect-wallet'>
+        <ConnectWallet />
+      </Route>
+      <Route path='/connect-wallet'>
+        <ConnectWallet />
+      </Route>
+      <Route path={'/legal/terms-of-service'}>
+        <Layout>
+          <TermsOfService />
+        </Layout>
+      </Route>
+      <Route path={'/legal/privacy-policy'}>
+        <Layout>
+          <PrivacyPolicy />
+        </Layout>
+      </Route>
+      <Route path='/flags'>
+        <Layout>
+          <Flags />
+        </Layout>
+      </Route>
       <Redirect from='/' to='/dashboard' />
       <Route component={NotFound} />
     </Switch>

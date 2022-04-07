@@ -1,41 +1,32 @@
-import { Box, Container, Flex } from '@chakra-ui/react'
+import { Container, ContainerProps, Flex } from '@chakra-ui/react'
 import React from 'react'
-import { Route } from 'Routes/helpers'
 
 import { Header } from './Header/Header'
-import { LeftSidebar } from './LeftSidebar'
-import { RightSidebar } from './RightSidebar'
+import { SideNav } from './Header/SideNav'
 
-export const Layout = ({ route }: { route: Route }) => {
+type LayoutProps = ContainerProps
+
+export const Layout: React.FC<LayoutProps> = ({ children, ...rest }) => {
   return (
     <>
-      <Header route={route} />
-      <Container
-        as='main'
-        maxWidth='full'
-        width='full'
-        paddingBottom='0'
-        marginInline='auto'
-        paddingInlineStart='0'
-        paddingInlineEnd='0'
-      >
-        <Box display={{ base: 'block', md: 'flex' }} width='full'>
-          <Box flex={1}>
-            <Box id='content' mx='auto' minH='76vh'>
-              <Flex
-                maxWidth={{ base: 'auto', '2xl': '1464px' }}
-                mx='auto'
-                px={{ base: 0, lg: 4 }}
-                flexDir={{ base: 'column', lg: 'row' }}
-              >
-                {route?.leftSidebar && <LeftSidebar>{route.leftSidebar}</LeftSidebar>}
-                {route.main}
-                {route?.rightSidebar && <RightSidebar>{route.rightSidebar}</RightSidebar>}
-              </Flex>
-            </Box>
-          </Box>
-        </Box>
-      </Container>
+      <Header />
+
+      <Flex>
+        <SideNav />
+        <Container
+          as='main'
+          maxWidth='full'
+          width='full'
+          paddingBottom={{ base: 'calc(0 + env(safe-area-inset-bottom))', md: 0 }}
+          marginInline='auto'
+          paddingInlineStart='0'
+          paddingInlineEnd='0'
+          flex='1 1 0%'
+          {...rest}
+        >
+          {children}
+        </Container>
+      </Flex>
     </>
   )
 }

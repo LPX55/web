@@ -1,14 +1,15 @@
 import {
   Button,
   ButtonGroup,
+  ButtonGroupProps,
   useId,
   useRadio,
   useRadioGroup,
   UseRadioProps
 } from '@chakra-ui/react'
-import { HistoryTimeframe } from '@shapeshiftoss/market-service'
-import { Text } from 'components/Text'
+import { HistoryTimeframe } from '@shapeshiftoss/types'
 import { memo } from 'react'
+import { Text } from 'components/Text'
 
 interface RadioCardProps extends UseRadioProps {
   label: string
@@ -36,6 +37,7 @@ export interface RadioProps<T> {
   onChange: (value: T) => void
   variant?: string
   colorScheme?: string
+  buttonGroupProps?: ButtonGroupProps
 }
 
 type RadioTypes = string | HistoryTimeframe
@@ -46,7 +48,8 @@ export const Radio = <T extends RadioTypes>({
   onChange,
   defaultValue,
   variant = 'ghost',
-  colorScheme = 'blue'
+  colorScheme = 'blue',
+  buttonGroupProps
 }: RadioProps<T>) => {
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: name ?? 'radio',
@@ -57,7 +60,13 @@ export const Radio = <T extends RadioTypes>({
   const group = getRootProps()
 
   return (
-    <ButtonGroup {...group} variant={variant} colorScheme={colorScheme} size='sm'>
+    <ButtonGroup
+      {...group}
+      variant={variant}
+      colorScheme={colorScheme}
+      size='sm'
+      {...buttonGroupProps}
+    >
       {options.map(option => {
         return (
           <RadioCard

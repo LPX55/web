@@ -1,49 +1,76 @@
-import { Keyring } from '@shapeshiftoss/hdwallet-core'
-import { WebUSBKeepKeyAdapter } from '@shapeshiftoss/hdwallet-keepkey-webusb'
-import { NativeAdapter } from '@shapeshiftoss/hdwallet-native'
-import KEEPKEY_ICON from 'assets/svg/keepkey-logo.svg'
-import SS_NATIVE_ICON from 'assets/svg/sswallet.svg'
+import { ComponentWithAs, IconProps } from '@chakra-ui/react'
 import { RouteProps } from 'react-router-dom'
 
-import { PinModal } from './KeepKey/PinModal'
-import { NativeImport } from './NativeWallet/NativeImport'
-import { NativePassword } from './NativeWallet/NativePassword'
-import { NativeSeed } from './NativeWallet/NativeSeed'
-import { NativeStart } from './NativeWallet/NativeStart'
-import { NativeSuccess } from './NativeWallet/NativeSuccess'
-import { NativeTestPhrase } from './NativeWallet/NativeTestPhrase'
+import { KeepKeyConnect } from './KeepKey/components/Connect'
+import { KeepKeyPassphrase } from './KeepKey/components/Passphrase'
+import { KeepKeyPin } from './KeepKey/components/Pin'
+import { KeepKeySuccess } from './KeepKey/components/Success'
+import { KeepKeyConfig } from './KeepKey/config'
+import { KeyManager } from './KeyManager'
+import { MetaMaskConnect } from './MetaMask/components/Connect'
+import { MetaMaskFailure } from './MetaMask/components/Failure'
+import { MetaMaskSuccess } from './MetaMask/components/Success'
+import { MetaMaskConfig } from './MetaMask/config'
+import { EnterPassword } from './NativeWallet/components/EnterPassword'
+import { NativeCreate } from './NativeWallet/components/NativeCreate'
+import { NativeImport } from './NativeWallet/components/NativeImport'
+import { NativeLoad } from './NativeWallet/components/NativeLoad'
+import { NativePassword } from './NativeWallet/components/NativePassword'
+import { NativeRename } from './NativeWallet/components/NativeRename'
+import { NativeStart } from './NativeWallet/components/NativeStart'
+import { NativeSuccess } from './NativeWallet/components/NativeSuccess'
+import { NativeTestPhrase } from './NativeWallet/components/NativeTestPhrase'
+import { NativeConfig } from './NativeWallet/config'
+import { PortisConnect } from './Portis/components/Connect'
+import { PortisFailure } from './Portis/components/Failure'
+import { PortisSuccess } from './Portis/components/Success'
+import { PortisConfig } from './Portis/config'
 
 export interface SupportedWalletInfo {
   adapter: any
-  icon: string
+  icon: ComponentWithAs<'svg', IconProps>
   name: string
-  init: (keyring: Keyring) => NativeAdapter
-  setup: () => any
   routes: RouteProps[]
 }
 
-export const SUPPORTED_WALLETS: { [key: string]: SupportedWalletInfo } = {
-  native: {
-    adapter: NativeAdapter,
-    icon: SS_NATIVE_ICON,
-    name: 'ShapeShift',
-    init: NativeAdapter.useKeyring,
-    setup: () => {},
+export const SUPPORTED_WALLETS: Record<KeyManager, SupportedWalletInfo> = {
+  [KeyManager.Native]: {
+    ...NativeConfig,
     routes: [
+      { path: '/native/connect', component: NativeStart },
+      { path: '/native/load', component: NativeLoad },
       { path: '/native/password', component: NativePassword },
-      { path: '/native/start', component: NativeStart },
-      { path: '/native/seed', component: NativeSeed },
+      { path: '/native/rename', component: NativeRename },
       { path: '/native/import', component: NativeImport },
-      { path: '/native/seed-test', component: NativeTestPhrase },
-      { path: '/native/success', component: NativeSuccess }
+      { path: '/native/create', component: NativeCreate },
+      { path: '/native/create-test', component: NativeTestPhrase },
+      { path: '/native/success', component: NativeSuccess },
+      { path: '/native/enter-password', component: EnterPassword }
     ]
   },
-  keepkey: {
-    adapter: WebUSBKeepKeyAdapter,
-    icon: KEEPKEY_ICON,
-    name: 'KeepKey',
-    init: WebUSBKeepKeyAdapter.useKeyring,
-    setup: () => {},
-    routes: [{ path: '/keepkey/pin', component: PinModal }]
+  [KeyManager.KeepKey]: {
+    ...KeepKeyConfig,
+    routes: [
+      { path: '/keepkey/connect', component: KeepKeyConnect },
+      { path: '/keepkey/success', component: KeepKeySuccess },
+      { path: '/keepkey/enter-pin', component: KeepKeyPin },
+      { path: '/keepkey/passphrase', component: KeepKeyPassphrase }
+    ]
+  },
+  [KeyManager.MetaMask]: {
+    ...MetaMaskConfig,
+    routes: [
+      { path: '/metamask/connect', component: MetaMaskConnect },
+      { path: '/metamask/success', component: MetaMaskSuccess },
+      { path: '/metamask/failure', component: MetaMaskFailure }
+    ]
+  },
+  [KeyManager.Portis]: {
+    ...PortisConfig,
+    routes: [
+      { path: '/portis/connect', component: PortisConnect },
+      { path: '/portis/success', component: PortisSuccess },
+      { path: '/portis/failure', component: PortisFailure }
+    ]
   }
 }

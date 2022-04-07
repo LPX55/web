@@ -1,36 +1,37 @@
 import { extendTheme } from '@chakra-ui/react'
 import { mode } from '@chakra-ui/theme-tools'
 import { createBreakpoints } from '@chakra-ui/theme-tools'
+import { AlertStyle as Alert } from 'components/Alert/Alert.theme'
+import { ButtonStyle as Button } from 'components/Button/Button.theme'
+import { CardStyle as Card } from 'components/Card/Card.theme'
+import { DrawerStyle as Drawer } from 'components/Drawer/Drawer.theme'
+import { FormStyle as Form } from 'components/Form/form.theme'
+import { HeadingStyle as Heading } from 'components/Heading/Heading.theme'
+import { InputStyle as Input } from 'components/Input/Input.theme'
+import { ListStyle as List } from 'components/List/list.theme'
+import { MenuStyle as Menu } from 'components/Menu/Menu.theme'
+import { ModalStyle as Modal } from 'components/Modal/Modal.theme'
+import { PopoverStyle as Popover } from 'components/Popover/Popover.theme'
+import { ProgressStyle as Progress } from 'components/Progres/Progress.theme'
+import { RowStyle as Row } from 'components/Row/Row.theme'
+import { SkeletonStyle as Skeleton } from 'components/Skeleton/Skeleton.theme'
+import { SpinnerStyle as Spinner } from 'components/Spinner/Spinner.theme'
+import { StatStyle as Stat } from 'components/Stat/Stat.theme'
+import { StepsStyle as CustomSteps } from 'components/Steps.theme'
+import { TableStyle as Table } from 'components/Table/Table.theme'
+import { TabsStyle as Tabs } from 'components/Tabs/Tabs.theme'
+import { TextareaStyle as Textarea } from 'components/Textarea/Textarea.theme'
+import { TooltipStyle as Tooltip } from 'components/Tooltip/Tooltip.theme'
 
 import { colors } from './colors'
-import { ButtonStyle as Button } from './components/Button'
-import { CardStyle as Card } from './components/Card'
-import { DrawerStyle as Drawer } from './components/Drawer'
-import { FormStyle as Form } from './components/Form'
-import { HeadingStyle as Heading } from './components/Heading'
-import { InputStyle as Input } from './components/Input'
-import { MenuStyle as Menu } from './components/Menu'
-import { ModalStyle as Modal } from './components/Modal'
-import { ProgressStyle as Progress } from './components/Progress'
-import { RowStyle as Row } from './components/Row'
-import { SpinnerStyle as Spinner } from './components/Spinner'
-import { StatStyle as Stat } from './components/Stat'
-import { TabsStyle as Tabs } from './components/Tabs'
-import { TextareaStyle as Textarea } from './components/Textarea'
 
 export const breakpoints = createBreakpoints({
   sm: '480px',
   md: '768px',
   lg: '992px',
   xl: '1280px',
-  '2xl': '1920px'
+  '2xl': '1440px'
 })
-
-// --1inch-page-bg-01: radial-gradient(94.32% 94.6% at 4.04% -44.6%,#2f8af566 0%,#002b5e00 100%),linear-gradient(0deg,#06070a,#06070a);
-// --1inch-page-bg-02: #06070a;
-// --1inch-page-bg-03: radial-gradient(50% 50% at 50% 50%,#285eb069 0%,#06131f00 100%);
-// --1inch-page-bg-04: radial-gradient(50% 50% at 50% 50%,#4a274abd 0%,#4c264900 100%);
-// backgroundImage: `radial-gradient(94.32% 94.6% at 4.04% -44.6%,${colors.blue[600]}66 0%,${colors.gray[900]}00 100%),linear-gradient(0deg,${colors.gray[900]},${colors.gray[900]})`
 
 const styles = {
   global: (props: Record<string, any>) => ({
@@ -95,6 +96,7 @@ export const theme = extendTheme({
   },
   colors,
   components: {
+    Alert,
     Button,
     Menu,
     Spinner,
@@ -104,11 +106,17 @@ export const theme = extendTheme({
     Modal,
     Card,
     Form,
+    List,
     Heading,
     Progress,
     Row,
     Drawer,
-    Textarea
+    Textarea,
+    Tooltip,
+    Table,
+    Skeleton,
+    Steps: CustomSteps,
+    Popover
   },
   shadows: {
     xl: '0 2px 4px 2px rgba(0,0,0,.15),0 2px 10px 2px rgba(0,0,0,.2)',

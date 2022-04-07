@@ -1,8 +1,13 @@
-import { Card } from 'components/Card'
+import { useSelector } from 'react-redux'
+import { Card } from 'components/Card/Card'
 import { Text } from 'components/Text'
-import { Transactions } from 'components/Transactions/Transactions'
+import { TransactionHistoryList } from 'components/TransactionHistory/TransactionHistoryList'
+import { ReduxState } from 'state/reducer'
+import { selectLastNTxIds } from 'state/slices/selectors'
 
 export const RecentTransactions = () => {
+  const recentTxIds = useSelector((state: ReduxState) => selectLastNTxIds(state, 10))
+
   return (
     <Card>
       <Card.Header>
@@ -10,9 +15,7 @@ export const RecentTransactions = () => {
           <Text translation={'dashboard.recentTransactions.recentTransactions'} />
         </Card.Heading>
       </Card.Header>
-      <Card.Body px={2} pt={0}>
-        <Transactions limit={8} />
-      </Card.Body>
+      <TransactionHistoryList txIds={recentTxIds} useCompactMode={true} />
     </Card>
   )
 }

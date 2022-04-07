@@ -15,12 +15,13 @@ import React from 'react'
 export type Route = {
   path: string
   label: string
-  main: React.ReactNode
-  leftSidebar?: React.ReactNode
-  rightSidebar?: React.ReactNode
+  main: React.ElementType<{ route?: Route }> | null
   parent?: Route | null
-  routes?: Omit<Route, 'routes'>[]
+  routes?: Route[]
   icon?: JSX.Element
+  disable?: boolean
+  hide?: boolean
+  breadcrumb?: string | React.ReactNode
 }
 
 const combinePaths = (parent: string, child: string): string =>
@@ -74,6 +75,7 @@ const setupParents = (routes: Route[], Route?: Route): Route[] =>
  */
 const flattenRoutes = (routes: Route[]): Route[] =>
   routes
+    .filter(route => !route.disable)
     .map(route => [route.routes ? flattenRoutes(route.routes) : ([] as any[]), route])
     .flat(Infinity)
 

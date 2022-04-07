@@ -7,7 +7,7 @@
 
   Please see ShapeShift's [responsible disclosure program](https://corp.shapeshift.io/responsible-disclosure-program/).
 
-- When contributing to ShapeShift Web, please discus the change you want to make via
+- When contributing to ShapeShift Web, please discuss the change you want to make via
   a GitHub issue before making a change and submitting a PR.
 
 #### Submitting a Patch
@@ -24,6 +24,9 @@
 
 - Where possible, please provide unit tests / integration tests that
   demonstrate new functionality is working.
+  
+- For all presentational components we leverage the [Chakra UI](https://chakra-ui.com/) with a custom theme. All of your components should be composed of Chakra UI base components. 
+If a need arises were you need to build something completely custom. Please post in the `#product-public-chat` on [Discord](https://discord.gg/shapeshift).
 
 #### Getting Your PR Accepted
 
